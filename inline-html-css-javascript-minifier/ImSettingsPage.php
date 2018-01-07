@@ -10,14 +10,14 @@ class ImSettingsPage {
      * Start up
      */
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_plugin_page'));
-        add_action('admin_init', array($this, 'page_init'));
+        add_action('admin_menu', array($this, 'im_add_plugin_page'));
+        add_action('admin_init', array($this, 'im_page_init'));
     }
 
     /**
      * Add options page
      */
-    public function add_plugin_page() {
+    public function im_add_plugin_page() {
         // Will appear under "Settings"
         add_options_page(
             'Settings Admin',
@@ -31,7 +31,7 @@ class ImSettingsPage {
     /**
      * Options page callback
      */
-    public function create_admin_page() {
+    public function im_create_admin_page() {
         // Set class property
         $this->options = get_option('im_options');
         ?>
@@ -52,7 +52,7 @@ class ImSettingsPage {
     /**
      * Register and add settings
      */
-    public function page_init() {
+    public function im_page_init() {
 
         register_setting(
             'my_option_group',
@@ -63,28 +63,28 @@ class ImSettingsPage {
         add_settings_section(
             'main_settings', // id
             'Choose what gets minified',   // title
-            array($this,'print_setting_info'), // callback
+            array($this,'im_print_setting_info'), // callback
             'inline-html-css-javascript-minifier-settings' // page
         );
 
         add_settings_field(
             'html', // id
             'HTML', // title
-            array($this,'checkbox_html'), // callback
+            array($this,'im_checkbox_html'), // callback
             'inline-html-css-javascript-minifier-settings', // page
             'main_settings' // section
         );
         add_settings_field(
             'css', // id
             'CSS', // title
-            array($this,'checkbox_css'), // callback
+            array($this,'im_checkbox_css'), // callback
             'inline-html-css-javascript-minifier-settings', // page
             'main_settings' // section
         );
         add_settings_field(
             'javascript', // id
             'Javascript', // title
-            array($this,'checkbox_javascript'), // callback
+            array($this,'im_checkbox_javascript'), // callback
             'inline-html-css-javascript-minifier-settings', // page
             'main_settings' // section
         );
@@ -110,26 +110,26 @@ class ImSettingsPage {
     /**
      * Print the section text
      */
-    public function print_setting_info() {
+    public function im_print_setting_info() {
         //print 'Enter your settings below:';
     }
 
     /**
      * Get the settings options array and print one of its values
      */
-    public function checkbox_html() {
+    public function im_checkbox_html() {
         printf(
             '<input type="checkbox" id="html" name="im_options[html]" value="1" %s />',
             isset($this->options['html']) && intval($this->options['html']) === 1 ? 'checked="checked"' : ''
         );
     }
-    public function checkbox_css() {
+    public function im_checkbox_css() {
         printf(
             '<input type="checkbox" id="css" name="im_options[css]" value="1" %s />',
             isset($this->options['css']) && intval($this->options['css']) === 1 ? 'checked="checked"' : ''
         );
     }
-    public function checkbox_javascript() {
+    public function im_checkbox_javascript() {
         printf(
             '<input type="checkbox" id="javascript" name="im_options[javascript]" value="1" %s />',
             isset($this->options['javascript']) && intval($this->options['javascript']) === 1 ? 'checked="checked"' : ''

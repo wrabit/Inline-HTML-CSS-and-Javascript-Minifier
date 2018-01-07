@@ -9,16 +9,51 @@ Version: 0.9
 
 include( plugin_dir_path( __FILE__ ) . 'ImSettingsPage.php' );
 
-if( is_admin() )
-    $im_settings_page = new ImSettingsPage();
+// Set activation
+function im_install_activate() {
+    set_transient('show-im-varnish-warning', true, 5);
+}
+register_activation_hook( __FILE__, 'im_install_activate' );
+
+// Admin notice to warn about incompatibility with Varnish cache
+add_action( 'admin_notices', 'im_varnish_warning' );
+
+function im_varnish_warning() {
+    // check for transient
+    if( get_transient('show-im-varnish-warning') ) { ?>
+        <div class="notice notice-warning is-dismissable">
+            <p><?php _e( 'WARNING: Inline Html, Css & Javascript Minifier will not work with Varnish caching'); ?></p>
+        </div>
+        <?php
+        delete_transient('show-im-varnish-warning');
+    }
+}
+
+// Add admin menu
+if( is_admin() ) $im_settings_page = new ImSettingsPage();
 
 $options = get_option('im_options');
 
-//if( !empty($options['html']) || !empty($options['css'] || !empty($options['javascript']) ) )  {
-//}
+// Buffering and modifying output
+function im_buffer_start() {
+
+    $options = get_option('im_options');
+
+    ob_start( function($buffer) use ($options) {
+        return im_minify_html($buffer, $options);
+    });
+}
+function im_buffer_end() {
+    @ob_end_flush();
+}
+
+if( !is_admin() ) {
+    add_action('after_setup_theme', 'im_buffer_start');
+    add_action('shutdown', 'im_buffer_end');
+}
 
 // HTML Minifier
-function minify_html($input,$options = array()) {
+function im_minify_html($input,$options = array()) {
 
     if(trim($input) === "") return $input;
 
@@ -164,25 +199,3 @@ function minify_js($input) {
     $input);
 
 }
-
-
-
-function callback($buffer, $options = array('html' => 1, 'css' => 1, 'javascript' => 1)) {
-    $buffer = minify_html($buffer, $options);
-    return $buffer;
-}
-
-function buffer_start() {
-
-	$options = get_option('im_options');
-
-	ob_start( function($buffer) use ($options) {
-		return minify_html($buffer, $options);
-	});
-}
-function buffer_end() {
-	@ob_end_flush();
-}
-
-add_action('after_setup_theme', 'buffer_start');
-add_action('shutdown', 'buffer_end');
