@@ -10,50 +10,63 @@ Version: 0.9
 include( plugin_dir_path( __FILE__ ) . 'ImSettingsPage.php' );
 
 // Set activation
-function im_install_activate() {
-    set_transient('show-im-varnish-warning', true, 5);
+function inline_hcjm_activate() {
+    // set transient to display admin notices
+    set_transient('inline-hcjml-activated', true, 5);
+
+    // set default values
+    $default = [
+        'html'       => 1,
+        'css'        => 1,
+        'javascript' => 1
+    ];
+    update_option( 'inline_hcjm_options', $default );
 }
-register_activation_hook( __FILE__, 'im_install_activate' );
+register_activation_hook( __FILE__, 'inline_hcjm_activate' );
 
 // Admin notice to warn about incompatibility with Varnish cache
-add_action( 'admin_notices', 'im_varnish_warning' );
+add_action( 'admin_notices', 'inline_hcjmh_warning' );
 
-function im_varnish_warning() {
+function inline_hcjmh_warning() {
     // check for transient
-    if( get_transient('show-im-varnish-warning') ) { ?>
+    if( get_transient('inline-hcjml-activated') ) { ?>
+        <div class="notice notice-info is-dismissable">
+            <p><?php echo __( 'Inline Html, Css & Javascript minifier activated. Choose what gets minified - ', 'inline-hcjml') . ' <a href="options-general.php?page=inline-html-css-javascript-minifier-settings">'.__('settings page','inline-hcjml') . '</a>.'; ?></p>
+        </div>
         <div class="notice notice-warning is-dismissable">
-            <p><?php _e( 'WARNING: Inline Html, Css & Javascript Minifier will not work with Varnish caching'); ?></p>
+            <p><?php echo __( 'WARNING: Inline Html, Css & Javascript Minifier will not work with Varnish caching','inline-hcjml'); ?></p>
         </div>
         <?php
-        delete_transient('show-im-varnish-warning');
+        delete_transient('inline-hcjml-activated');
     }
 }
 
 // Add admin menu
-if( is_admin() ) $im_settings_page = new ImSettingsPage();
+if( is_admin() ) $inline_hcjmgs_page = new ImSettingsPage();
 
-$options = get_option('im_options');
+$options = get_option('inline_hcjm_options');
+pc::Debug($options, 'options');
 
 // Buffering and modifying output
-function im_buffer_start() {
+function inline_hcjm_start() {
 
-    $options = get_option('im_options');
+    $options = get_option('inline_hcjm_options');
 
     ob_start( function($buffer) use ($options) {
-        return im_minify_html($buffer, $options);
+        return inline_hcjm_html($buffer, $options);
     });
 }
-function im_buffer_end() {
+function inline_hcjm_end() {
     @ob_end_flush();
 }
 
 if( !is_admin() ) {
-    add_action('after_setup_theme', 'im_buffer_start');
-    add_action('shutdown', 'im_buffer_end');
+    add_action('after_setup_theme', 'inline_hcjm_start');
+    add_action('shutdown', 'inline_hcjm_end');
 }
 
 // HTML Minifier
-function im_minify_html($input,$options = array()) {
+function inline_hcjm_html($input,$options = array()) {
 
     if(trim($input) === "") return $input;
 
